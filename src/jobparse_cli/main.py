@@ -1,47 +1,61 @@
-import sys
-
 import anthropic
 from dotenv import load_dotenv
+from prompt_toolkit import PromptSession
+from prompt_toolkit.key_binding import KeyBindings
+from rich.console import Console
+from rich.text import Text
 
 from jobparse_cli.extract import ExtractionError, extract
 from jobparse_cli.reply import NotAJobAdError
 
+out = Console()
+err = Console(stderr=True)
 
-def read_ad() -> str | None:
-    lines = []
-    while True:
-        line = input()
-        if line == "/quit":
-            return None
-        if line == ".":
-            break
-        lines.append(line)
-    return "\n".join(lines)
+
+def make_session() -> PromptSession[str]:
+    bindings = KeyBindings()
+
+    @bindings.add("enter")
+    def _submit(event):
+        event.current_buffer.validate_and_handle()
+
+    # Shift+Enter arrives as Esc+Enter once the terminal is set up to send it.
+    @bindings.add("escape", "enter")
+    @bindings.add("c-j")
+    def _newline(event):
+        event.current_buffer.insert_text("\n")
+
+    return PromptSession(multiline=True, key_bindings=bindings)
 
 
 def run():
     client = anthropic.Anthropic()
-    print("Paste a job ad, end with a line containing only '.'. Type /quit to exit.")
+    session = make_session()
+    out.print(
+        "Paste a job ad and press Enter. Shift+Enter or Ctrl+J adds a new line. Type /quit to exit.",
+        style="dim",
+    )
 
     while True:
-        ad = read_ad()
-        if ad is None:
+        ad = session.prompt("> ")
+        if ad.strip() == "/quit":
             return
         if not ad.strip():
             continue
 
         try:
-            obj = extract(client, ad)
+            with out.status("Extracting..."):
+                obj = extract(client, ad)
         except NotAJobAdError:
-            print("error: not a job ad", file=sys.stderr)
+            err.print("error: not a job ad", style="red")
             continue
         except ExtractionError as e:
-            print(f"error: {e}", file=sys.stderr)
+            err.print(Text(f"error: {e}", style="red"))
             if e.raw_text:
-                print(e.raw_text, file=sys.stderr)
+                err.print(e.raw_text, markup=False, highlight=False, soft_wrap=True)
             continue
 
-        print(obj.model_dump_json(indent=2))
+        out.print_json(obj.model_dump_json())
 
 
 def main():

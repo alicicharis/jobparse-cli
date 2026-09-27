@@ -26,8 +26,16 @@ environment takes precedence.
 uv run jobparse-cli
 ```
 
-Paste a job ad, then end it with a line containing only `.`. Type `/quit` to
-exit.
+Paste a job ad and press Enter. Pasted line breaks stay in the input, so a
+multi-line ad submits in one go. Ctrl+J or Esc+Enter adds a new line. Type
+`/quit` (or press Ctrl-C / Ctrl-D) to exit.
+
+Most terminals send the same key code for Shift+Enter and Enter. To make
+Shift+Enter add a new line in Ghostty, add this to your Ghostty config:
+
+```
+keybind = shift+enter=text:\x1b\r
+```
 
 ## Tests
 
