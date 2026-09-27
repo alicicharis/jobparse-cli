@@ -48,7 +48,9 @@ prompt injection) the check is simply whether the input was rejected as not a
 job ad. Full results go to `docs/data/eval_results/<YYYY-MM-DD_HHMMSS>.json`. Each run gets its own file,
 so older runs stay around for comparison.
 
-### Latest run: 2026-09-27
+### Phase 1 run: prompt only (2026-09-27)
+
+Model: Sonnet 5 (`claude-sonnet-5`).
 
 Results: `docs/data/eval_results/2026-09-27_101703.json`. 22 entries, no
 errors.
@@ -84,6 +86,48 @@ Where points were lost:
   or "modern web technologies" in the generic hiring post.
 - Listing skills the company will teach as if they were requirements
   (Marketing Coordinator).
+
+### Phase 2 run: Pydantic (2026-09-27)
+
+Model: Sonnet 5 (`claude-sonnet-5`).
+
+Results: `docs/data/eval_results/2026-09-27_103540.json`. 22 entries, no
+errors.
+
+What changed from phase 1: the reply shape is now a Pydantic model
+(`Extraction`). Its JSON schema is sent to the API as a structured output
+format, and the reply is validated with `Extraction.model_validate_json`
+instead of hand-written checks. Non-job input is flagged with an `is_job_ad`
+field rather than a `{"not_a_job_ad": true}` sentinel, and the prompt no longer
+spells out the JSON formatting rules.
+
+| Kind      | Entries | Result                                     |
+| --------- | ------- | ------------------------------------------ |
+| `job`     | 14      | 0 wrongly rejected, average score 9.3 / 10 |
+| `not_job` | 8       | 8 / 8 rejected                             |
+
+Score distribution for job ads: 7 x 10, 4 x 9, 3 x 8.
+
+Compared with phase 1, classification is identical (22 / 22 correct) and the
+average moved from 9.2 to 9.3. Only three scores changed, by one point each and
+in both directions: Marketing Coordinator 7 -> 8, Principal Architect 8 -> 9,
+Sales Engineer 9 -> 8. That is within what the self-grading noise could
+explain, so the gain from Pydantic is a guaranteed reply shape, not better
+extraction.
+
+Where points were lost:
+
+- Skills taken from outside the ad's skills list: "technical sales" from
+  "4-6 years in a technical sales role" (Sales Engineer, 8).
+- Skills paraphrased or padded: "clear technical writing" for "write clear
+  technical content" (Technical Writer, 8), "strategic technology decisions"
+  dropping the verb (Principal Architect, 9), "CI/CD pipeline experience"
+  (DevOps Lead, 9).
+- Skills the company will teach listed as requirements, and `junior` inferred
+  from "no prior experience needed" (Marketing Coordinator, 8).
+- Borderline calls the grader flagged but accepted: "Entry level" mapped to
+  `junior` (Data Analyst, 9) and "modern web technologies" kept as a skill
+  (generic hiring post, 9).
 
 The grader is the model itself, so treat the scores as a rough signal rather
 than ground truth.

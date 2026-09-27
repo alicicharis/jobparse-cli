@@ -1,9 +1,11 @@
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Literal
 
 import anthropic
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 from jobparse_cli.extract import MODEL, ExtractionError, extract
 from jobparse_cli.reply import NotAJobAdError
@@ -46,24 +48,21 @@ Keep your response concise and direct.
 """
 
 
-GRADE_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "strengths": {"type": "array", "items": {"type": "string"}},
-        "weaknesses": {"type": "array", "items": {"type": "string"}},
-        "reasoning": {"type": "string"},
-        "score": {"type": "integer", "enum": list(range(1, 11))},
-    },
-    "required": ["strengths", "weaknesses", "reasoning", "score"],
-    "additionalProperties": False,
-}
+class Grade(BaseModel):
+    strengths: list[str]
+    weaknesses: list[str]
+    reasoning: str
+    score: Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
-def grade(client: anthropic.Anthropic, ad: str, output: dict) -> dict:
+GRADE_FORMAT = {"type": "json_schema", "schema": anthropic.transform_schema(Grade)}
+
+
+def grade(client: anthropic.Anthropic, ad: str, output: dict) -> Grade:
     response = client.messages.create(
         model=MODEL,
         max_tokens=4096,
-        output_config={"format": {"type": "json_schema", "schema": GRADE_SCHEMA}},
+        output_config={"format": GRADE_FORMAT},
         messages=[{"role": "user", "content": build_eval_prompt(ad, output)}],
     )
     text = "".join(block.text for block in response.content if block.type == "text")
@@ -71,7 +70,7 @@ def grade(client: anthropic.Anthropic, ad: str, output: dict) -> dict:
     # The schema guarantees valid JSON only when the reply ran to completion.
     if response.stop_reason in ("max_tokens", "refusal"):
         raise ValueError(f"grader stop_reason {response.stop_reason}\n{text}")
-    return json.loads(text)
+    return Grade.model_validate_json(text)
 
 
 def main():
@@ -86,7 +85,7 @@ def main():
         results.append(result)
 
         try:
-            result["output"] = extract(client, entry["ad"])
+            result["output"] = extract(client, entry["ad"]).model_dump()
         except NotAJobAdError:
             result["rejected"] = True
         except ExtractionError as e:
@@ -111,7 +110,7 @@ def main():
             continue
 
         try:
-            result["grade"] = grade(client, entry["ad"], result["output"])
+            result["grade"] = grade(client, entry["ad"], result["output"]).model_dump()
         except (anthropic.APIError, ValueError) as e:
             result["error"] = f"grading failed: {e}"
             print(f"{prefix} {result['error']}")

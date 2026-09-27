@@ -1,4 +1,3 @@
-import json
 import sys
 
 import anthropic
@@ -42,7 +41,7 @@ def run():
                 print(e.raw_text, file=sys.stderr)
             continue
 
-        print(json.dumps(obj, indent=2))
+        print(obj.model_dump_json(indent=2))
 
 
 def main():

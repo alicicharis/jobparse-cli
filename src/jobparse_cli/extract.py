@@ -1,9 +1,10 @@
 import anthropic
 
 from jobparse_cli.prompt import SYSTEM_PROMPT
-from jobparse_cli.reply import parse_reply
+from jobparse_cli.reply import Extraction, parse_reply
 
 MODEL = "claude-sonnet-5"
+OUTPUT_FORMAT = {"type": "json_schema", "schema": anthropic.transform_schema(Extraction)}
 
 
 class ExtractionError(Exception):
@@ -12,12 +13,12 @@ class ExtractionError(Exception):
         self.raw_text = raw_text
 
 
-def extract(client: anthropic.Anthropic, ad: str) -> dict:
+def extract(client: anthropic.Anthropic, ad: str) -> Extraction:
     try:
         response = client.messages.create(
             model=MODEL,
             max_tokens=2048,
-            output_config={"effort": "low"},
+            output_config={"effort": "low", "format": OUTPUT_FORMAT},
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": ad}],
         )
@@ -26,6 +27,7 @@ def extract(client: anthropic.Anthropic, ad: str) -> dict:
 
     text = "".join(block.text for block in response.content if block.type == "text")
 
+    # The schema guarantees valid JSON only when the reply ran to completion.
     if response.stop_reason in ("max_tokens", "refusal"):
         raise ExtractionError(f"stop_reason {response.stop_reason}", text)
 
