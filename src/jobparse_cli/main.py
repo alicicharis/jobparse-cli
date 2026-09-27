@@ -2,9 +2,10 @@ import json
 import sys
 
 import anthropic
+from dotenv import load_dotenv
 
-from prompt import SYSTEM_PROMPT
-from reply import parse_reply
+from jobparse_cli.prompt import SYSTEM_PROMPT
+from jobparse_cli.reply import parse_reply
 
 
 def read_ad() -> str | None:
@@ -19,7 +20,7 @@ def read_ad() -> str | None:
     return "\n".join(lines)
 
 
-def main():
+def run():
     client = anthropic.Anthropic()
     print("Paste a job ad, end with a line containing only '.'. Type /quit to exit.")
 
@@ -62,8 +63,9 @@ def main():
         print(json.dumps(obj, indent=2))
 
 
-if __name__ == "__main__":
+def main():
+    load_dotenv()
     try:
-        main()
+        run()
     except (KeyboardInterrupt, EOFError):
         pass

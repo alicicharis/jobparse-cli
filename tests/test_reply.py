@@ -1,6 +1,6 @@
 import pytest
 
-from reply import parse_reply
+from jobparse_cli.reply import parse_reply
 
 
 def test_valid_object_returns_dict():
