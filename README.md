@@ -41,18 +41,18 @@ uv run pytest
 uv run evals/run_evals.py
 ```
 
-Reads `docs/data/dataset.json` (an array of `{"kind": "...", "ad": "..."}`
+Reads `evals/dataset.json` (an array of `{"kind": "...", "ad": "..."}`
 entries) and runs the extraction on each one. For `"kind": "job"` the model
 grades the result; for `"kind": "not_job"` (resumes, articles, off-topic text,
 prompt injection) the check is simply whether the input was rejected as not a
-job ad. Full results go to `docs/data/eval_results/<YYYY-MM-DD_HHMMSS>.json`. Each run gets its own file,
+job ad. Full results go to `evals/results/<YYYY-MM-DD_HHMMSS>.json`. Each run gets its own file,
 so older runs stay around for comparison.
 
 ### Phase 1 run: prompt only (2026-09-27)
 
 Model: Sonnet 5 (`claude-sonnet-5`).
 
-Results: `docs/data/eval_results/2026-09-27_101703.json`. 22 entries, no
+Results: `evals/results/2026-09-27_101703.json`. 22 entries, no
 errors.
 
 | Kind      | Entries | Result                                     |
@@ -91,7 +91,7 @@ Where points were lost:
 
 Model: Sonnet 5 (`claude-sonnet-5`).
 
-Results: `docs/data/eval_results/2026-09-27_103540.json`. 22 entries, no
+Results: `evals/results/2026-09-27_103540.json`. 22 entries, no
 errors.
 
 What changed from phase 1: the reply shape is now a Pydantic model
@@ -133,7 +133,7 @@ Where points were lost:
 
 Model: Sonnet 5 (`claude-sonnet-5`).
 
-Results: `docs/data/eval_results/2026-09-27_111730.json`. 22 entries, no
+Results: `evals/results/2026-09-27_111730.json`. 22 entries, no
 errors.
 
 What changed from the previous run:

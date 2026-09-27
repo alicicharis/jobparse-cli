@@ -11,9 +11,9 @@ from jobparse_cli.extract import MODEL, ExtractionError, extract
 from jobparse_cli.prompt import FIELD_RULES
 from jobparse_cli.reply import NotAJobAdError
 
-DATA_DIR = Path(__file__).parent.parent / "docs" / "data"
-DATASET_PATH = DATA_DIR / "dataset.json"
-RESULTS_DIR = DATA_DIR / "eval_results"
+EVALS_DIR = Path(__file__).parent
+DATASET_PATH = EVALS_DIR / "dataset.json"
+RESULTS_DIR = EVALS_DIR / "results"
 
 
 def build_eval_prompt(ad: str, output: dict) -> str:
