@@ -2,7 +2,7 @@
 
 Ordered by build sequence.
 
-## 1. Prompt-only job ad extraction - to do
+## 1. Prompt-only job ad extraction - done
 
 **What:** Paste a job ad into the terminal and get back a validated JSON object with `title`, `skills` and `seniority`. It's done when valid replies print as pretty JSON, and every failure (parse, validation, stop reason, API) is reported clearly while the loop keeps running.
 
