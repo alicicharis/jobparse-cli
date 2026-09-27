@@ -1,6 +1,6 @@
 import pytest
 
-from jobparse_cli.reply import parse_reply
+from jobparse_cli.reply import NotAJobAdError, parse_reply
 
 
 def test_valid_object_returns_dict():
@@ -35,3 +35,8 @@ def test_out_of_range_seniority_raises_value_error():
     text = '{"title": "Engineer", "skills": [], "seniority": "staff"}'
     with pytest.raises(ValueError, match="seniority must be one of"):
         parse_reply(text)
+
+
+def test_not_a_job_ad_marker_raises_not_a_job_ad_error():
+    with pytest.raises(NotAJobAdError):
+        parse_reply('{"not_a_job_ad": true}')

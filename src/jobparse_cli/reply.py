@@ -2,6 +2,11 @@ import json
 
 SENIORITY_VALUES = ("intern", "junior", "mid", "senior", "lead", "principal")
 REQUIRED_KEYS = ("title", "skills", "seniority")
+NOT_A_JOB_AD = {"not_a_job_ad": True}
+
+
+class NotAJobAdError(Exception):
+    pass
 
 
 def parse_reply(text: str) -> dict:
@@ -12,6 +17,9 @@ def parse_reply(text: str) -> dict:
 
     if not isinstance(obj, dict):
         raise ValueError("top level must be an object")
+
+    if obj == NOT_A_JOB_AD:
+        raise NotAJobAdError()
 
     for key in REQUIRED_KEYS:
         if key not in obj:
