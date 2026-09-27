@@ -129,5 +129,54 @@ Where points were lost:
   `junior` (Data Analyst, 9) and "modern web technologies" kept as a skill
   (generic hiring post, 9).
 
+### Phase 2 follow-up: shared rules and stricter grader (2026-09-27)
+
+Model: Sonnet 5 (`claude-sonnet-5`).
+
+Results: `docs/data/eval_results/2026-09-27_111730.json`. 22 entries, no
+errors.
+
+What changed from the previous run:
+
+- The field rules live in one place, `FIELD_RULES` in `prompt.py`, used by
+  both the app prompt and the grader, so they can't drift apart.
+- The skills rule is now defined: skills the candidate is asked to have
+  (required or nice to have), including ones named in experience
+  requirements. Duties of the role, skills the company will teach and
+  catch-all phrases are left out, and the ad's wording is trimmed of filler
+  like "experience with", "strong" or "ability to".
+- Seniority mapping: `intern` only for internships, entry-level roles are
+  `junior`.
+- The grader only takes off points for rule violations, invented items or
+  missed items, gives 10 when it finds none, and may leave `weaknesses` empty.
+
+| Kind      | Entries | Result                                     |
+| --------- | ------- | ------------------------------------------ |
+| `job`     | 14      | 0 wrongly rejected, average score 9.9 / 10 |
+| `not_job` | 8       | 8 / 8 rejected                             |
+
+Score distribution for job ads: 12 x 10, 2 x 9.
+
+The average went from 9.3 to 9.9. Both prompts changed in this run, so part of
+the gain comes from the grader no longer marking down choices the rules allow,
+not only from better extraction. Visible changes in the output:
+
+- Marketing Coordinator now returns `skills: []`, since every skill in the ad
+  is one the company will teach (8 -> 10).
+- "modern web technologies" was dropped from the generic hiring post (9 -> 10).
+- Skills were trimmed: "technical writing" (Technical Writer, 8 -> 10),
+  "CI/CD pipeline" (DevOps Lead, 9 -> 10), "cloud infrastructure" and
+  "communication" (Sales Engineer).
+- Skills named in experience requirements were included: "DevOps" and "SRE"
+  from "6+ years in DevOps or SRE roles", "technical sales" from the Sales
+  Engineer ad.
+
+Remaining 9s, both style points rather than rule violations:
+
+- Sales Engineer: "managing complex deals" instead of "manage complex deals".
+- Principal Architect: "leading large engineering teams" and "strategic
+  technology decisions" read like duties, though the grader itself noted they
+  come from experience requirements and are allowed.
+
 The grader is the model itself, so treat the scores as a rough signal rather
 than ground truth.

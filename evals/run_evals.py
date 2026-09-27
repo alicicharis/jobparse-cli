@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 
 from jobparse_cli.extract import MODEL, ExtractionError, extract
+from jobparse_cli.prompt import FIELD_RULES
 from jobparse_cli.reply import NotAJobAdError
 
 DATA_DIR = Path(__file__).parent.parent / "docs" / "data"
@@ -21,9 +22,7 @@ You are an expert technical recruiter. Your task is to evaluate how well an AI
 extracted structured data from a job ad.
 
 The extraction had to follow these rules:
-- "title": the job title as written in the ad, or null if the ad does not state one
-- "skills": a flat list of skills, using the ad's own wording for each, or [] if the ad lists none
-- "seniority": one of "intern", "junior", "mid", "senior", "lead", "principal", or null if the ad does not indicate a seniority level
+{FIELD_RULES}
 
 Original job ad:
 <job_ad>
@@ -36,13 +35,17 @@ Extraction to evaluate:
 </extraction>
 
 Judge accuracy (nothing invented, seniority fits the ad), completeness (no
-title or skills missed) and adherence to the rules above.
+title or skills missed) and adherence to the rules above. The rules are the
+only standard: a choice they allow is not a weakness.
 
 Fill in the evaluation fields:
 - "strengths": 1-3 key strengths
-- "weaknesses": 1-3 key areas for improvement
+- "weaknesses": up to 3 specific rule violations, invented items or missed
+  items, or [] if there are none
 - "reasoning": a concise explanation of your overall assessment
-- "score": a whole number from 1 to 10
+- "score": a whole number from 1 to 10. Give 10 when "weaknesses" is empty.
+  Otherwise take off points only for the listed weaknesses, in proportion to
+  how much each one matters.
 
 Keep your response concise and direct.
 """
